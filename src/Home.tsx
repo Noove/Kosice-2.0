@@ -124,7 +124,13 @@ const Home = () => {
                   active: selectedBuildingRange.available![e.target.value],
                 });
               }}
-              value={selectedCategory}>
+              value={
+                (selectedBuildingRange.available &&
+                  Object.keys(selectedBuildingRange.available!).find(
+                    (key) => selectedBuildingRange.available![key] === selectedBuildingRange.active
+                  )) ||
+                1
+              }>
               <option value='1'>5 minút</option>
               <option value='10'>10 minút</option>
               <option value='15'>15 minút</option>

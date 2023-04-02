@@ -22,7 +22,7 @@ function MapContainer({
   async function reachableArea(lat: number, lng: number, minutes: number) {
     return (
       await axios({
-        url: `https://api.mapbox.com/isochrone/v1/mapbox/walking/${lng}%2C${lat}?contours_minutes=${minutes}&polygons=true&denoise=1&access_token=pk.eyJ1IjoidmRlbWNhayIsImEiOiJja3FwenlrZmowaXcwMm9vMXYzMTN2N3ZsIn0.dcz0zENlRQTwBppZaMAMog`,
+        url: `https://api.mapbox.com/isochrone/v1/mapbox/walking/${lng}%2C${lat}?contours_minutes=${minutes}&polygons=true&denoise=1&access_token=pk.eyJ1IjoidmRlbWNhayIsImEiOiJja3FwenlrZmowaXcwMm9vMXYzMTN2N3ZsIn0.dcz0zENlRQTwBppZaMAMog&generalize=0`,
         method: "GET",
       })
     ).data;
