@@ -2,7 +2,8 @@ import { useEffect, useRef } from "react";
 import { Layer, Map, Source } from "react-map-gl";
 import { useParams } from "react-router-dom";
 import { useRecoilState } from "recoil";
-import { selectedBuilding as selectedBuildingState } from "../lib/state";
+import { selectedBuildingRangeState, selectedBuilding as selectedBuildingState } from "../lib/state";
+import axios from "axios";
 
 function MapContainer({
   dataPolygons,
@@ -16,6 +17,31 @@ function MapContainer({
   const mapRef = useRef<any>(null);
   const { layer } = useParams();
   const [selectedBuilding, setSelectedBuilding] = useRecoilState(selectedBuildingState);
+  const [selectedBuildingRange, setSelectedBuildingRange] = useRecoilState(selectedBuildingRangeState);
+
+  async function reachableArea(lat: number, lng: number, minutes: number) {
+    return (
+      await axios({
+        url: `https://api.mapbox.com/isochrone/v1/mapbox/walking/${lng}%2C${lat}?contours_minutes=${minutes}&polygons=true&denoise=1&access_token=pk.eyJ1IjoidmRlbWNhayIsImEiOiJja3FwenlrZmowaXcwMm9vMXYzMTN2N3ZsIn0.dcz0zENlRQTwBppZaMAMog`,
+        method: "GET",
+      })
+    ).data;
+  }
+
+  async function click(polygonsGeojson: any, lat: number, lng: number) {
+    const minuty = [5, 10, 15, 20];
+
+    const state: any = {};
+
+    for (const pocetMinut of minuty) {
+      state[pocetMinut] = await reachableArea(lat, lng, pocetMinut);
+    }
+
+    setSelectedBuildingRange({
+      available: state,
+      active: state["5"],
+    });
+  }
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -60,14 +86,15 @@ function MapContainer({
           map.target.on("click", "buildings-3d", async function (e: any) {
             map.target.flyTo({
               center: e.lngLat,
-              zoom: 17,
+              zoom: 15,
               pitch: 60,
             });
 
             setSelectedBuilding(e.features[0].properties["@id"]);
+            click(dataPolygons, e.lngLat.lat, e.lngLat.lng);
           });
         }}>
-        <Source id='polygons' type='geojson' data={dataPolygons}>
+        <Source id='polygons' type='geojson' data={selectedBuildingRange.active ?? dataPolygons}>
           <Layer
             id='polygons-roi'
             type='fill'

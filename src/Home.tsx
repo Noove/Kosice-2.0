@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { BeatLoader } from "react-spinners";
 import MapContainer from "./components/Map";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { selectedBuilding as selectedBuildingState } from "./lib/state";
+import { selectedBuildingRangeState, selectedBuilding as selectedBuildingState } from "./lib/state";
 
 const Home = () => {
   const [loading, setLoading] = useState(true);
@@ -17,6 +17,7 @@ const Home = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   const [selectedBuilding, setSelectedBuilding] = useRecoilState(selectedBuildingState);
+  const [selectedBuildingRange, setSelectedBuildingRange] = useRecoilState(selectedBuildingRangeState);
 
   const selectedBuildingData = useMemo(() => {
     if (!selectedBuilding) return null;
@@ -24,6 +25,29 @@ const Home = () => {
   }, [selectedBuilding]);
 
   const navigate = useNavigate();
+
+  const singular = {
+    "Všeobecné detské ambulancie": "Všeobecná detská ambulancia",
+    Pošty: "Pošta",
+    "Zubné ambulancie": "Zubná ambulancia",
+    Restaurácie: "Restaurácia",
+    Ihriská: "Ihrisko",
+    Supermarkety: "Supermarket",
+    "Základné školy": "Základná škola",
+    "Psie výbehy": "Psí výbeh",
+    Drogérie: "Drogéria",
+    "Poštové schránky": "Poštová schránka",
+    "Mestská hromadná doprava": "Mestská hromadná doprava",
+    "Materské školy": "Materská škola",
+    "Fitness centrá": "Fitness centrum",
+    Bary: "Bar",
+    Krčmy: "Krčma",
+    "Rýchle občerstvenie": "Rýchle občerstvenie",
+    Lekárne: "Lekáreň",
+    Potraviny: "Potraviny",
+    Kaviarne: "Kaviareň",
+    "Všeobecné ambulancie": "Všeobecná ambulancia",
+  };
 
   // Fetch polygon data for map
   useEffect(() => {
@@ -87,23 +111,59 @@ const Home = () => {
     <>
       <MapContainer dataPolygons={dataPolygons} dataResidence={dataResidence} dataBuildings={dataBuildings} />
       {selectedBuilding && (
-        <div className='absolute bottom-0 left-10 w-96 z-10 bg-white px-5 pt-5 rounded-t-lg'>
-          <h1 className='text-2xl font-bold pb-3'>Dostupnosti služieb:</h1>
+        <div className='absolute bottom-0 left-10 z-10 bg-white px-5 pt-5 rounded-t-lg'>
+          <div className='flex justify-between items-center pb-3'>
+            <h1 className='text-2xl font-bold '>Dostupnosti služieb:</h1>
+            <select
+              id='building-distance'
+              name='building-distance'
+              className='w-min pl-3 py-2 mx-5 text-base border-gray-300 rounded-md focus:outline-none'
+              onChange={(e) => {
+                setSelectedBuildingRange({
+                  ...selectedBuildingRange,
+                  active: selectedBuildingRange.available![e.target.value],
+                });
+              }}
+              value={selectedCategory}>
+              <option value='1'>5 minút</option>
+              <option value='10'>10 minút</option>
+              <option value='15'>15 minút</option>
+              <option value='20'>20 minút</option>
+            </select>
+            <button
+              className='bg-gray-200 text-gray-500 rounded-full text-sm px-3 py-1'
+              onClick={() => {
+                setSelectedBuilding(null);
+                setSelectedBuildingRange({
+                  available: null,
+                  active: null,
+                });
+              }}>
+              Zavrieť
+            </button>
+          </div>
           <div className='overflow-y-scroll h-60'>
             {selectedBuildingData.properties.ids
               .sort((a: string, b: string) => {
+                // Show unreachable first
+                if (a.includes("unreachable")) return -1;
+                if (b.includes("unreachable")) return 1;
+
                 return Number(b.split("-")[b.split("-").length - 2]) - Number(a.split("-")[a.split("-").length - 2]);
               })
               .map((id: string) => {
-                if (id.split("-")[id.split("-").length - 2] === "unreachable") {
+                if (id.includes("unreachable")) {
                   return (
                     <div key={id} className='flex items-center pb-5'>
                       <div className={`w-4 h-4 rounded-full indicator-unreachable mr-3`}></div>
-                      <div className='text-gray-500'>
-                        {`Nedostupné - ${
-                          dataPolygons.features.find((feature: any) => feature.properties.id === id).properties.name
-                        }`}
-                      </div>
+                      <div className='text-gray-500'>{`Nedostupné - ${
+                        //@ts-ignore
+                        singular[
+                          dataPolygons.features.find(
+                            (feature: any) => feature.properties.id === id.replace("unreachable", "15-minut")
+                          ).properties.name
+                        ]
+                      }`}</div>
                     </div>
                   );
                 }
