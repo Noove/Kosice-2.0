@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { BeatLoader } from "react-spinners";
 import MapContainer from "./components/Map";
 
@@ -14,6 +14,8 @@ const Home = () => {
   const [selectedInterval, setSelectedInterval] = useState("5");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const navigate = useNavigate();
 
   // Fetch polygon data for map
