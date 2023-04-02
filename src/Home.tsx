@@ -88,13 +88,25 @@ const Home = () => {
       <MapContainer dataPolygons={dataPolygons} dataResidence={dataResidence} dataBuildings={dataBuildings} />
       {selectedBuilding && (
         <div className='absolute bottom-0 left-10 w-96 z-10 bg-white px-5 pt-5 rounded-t-lg'>
-          <h1 className='text-2xl font-bold pb-3'>Dostupné služby:</h1>
+          <h1 className='text-2xl font-bold pb-3'>Dostupnosti služieb:</h1>
           <div className='overflow-y-scroll h-60'>
             {selectedBuildingData.properties.ids
               .sort((a: string, b: string) => {
                 return Number(b.split("-")[b.split("-").length - 2]) - Number(a.split("-")[a.split("-").length - 2]);
               })
               .map((id: string) => {
+                if (id.split("-")[id.split("-").length - 2] === "unreachable") {
+                  return (
+                    <div key={id} className='flex items-center pb-5'>
+                      <div className={`w-4 h-4 rounded-full indicator-unreachable mr-3`}></div>
+                      <div className='text-gray-500'>
+                        {`Nedostupné - ${
+                          dataPolygons.features.find((feature: any) => feature.properties.id === id).properties.name
+                        }`}
+                      </div>
+                    </div>
+                  );
+                }
                 return (
                   <div key={id} className='flex items-center pb-5'>
                     <div

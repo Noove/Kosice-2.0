@@ -22,3 +22,7 @@
 .indicator-20 {
   @apply bg-red-500;
 }
+
+.indicator-unreachable {
+  @apply bg-gray-500;
+}
