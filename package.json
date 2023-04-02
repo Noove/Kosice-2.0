@@ -19,6 +19,7 @@
     "react-map-gl": "^7.0.21",
     "react-router-dom": "^6.10.0",
     "react-spinners": "^0.13.8",
+    "recoil": "^0.7.7",
     "resium": "^1.16.1"
   },
   "devDependencies": {

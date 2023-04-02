@@ -6,3 +6,19 @@
 .mapboxgl-ctrl-logo {
   display: none !important;
 }
+
+.indicator-5 {
+  @apply bg-green-500;
+}
+
+.indicator-10 {
+  @apply bg-yellow-500;
+}
+
+.indicator-15 {
+  @apply bg-orange-500;
+}
+
+.indicator-20 {
+  @apply bg-red-500;
+}

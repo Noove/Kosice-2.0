@@ -1,8 +1,10 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { BeatLoader } from "react-spinners";
 import MapContainer from "./components/Map";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { selectedBuilding as selectedBuildingState } from "./lib/state";
 
 const Home = () => {
   const [loading, setLoading] = useState(true);
@@ -14,8 +16,13 @@ const Home = () => {
   const [selectedInterval, setSelectedInterval] = useState("5");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  const [searchParams, setSearchParams] = useSearchParams();
-  
+  const [selectedBuilding, setSelectedBuilding] = useRecoilState(selectedBuildingState);
+
+  const selectedBuildingData = useMemo(() => {
+    if (!selectedBuilding) return null;
+    return dataBuildings.features.find((feature: any) => feature.properties["@id"] === selectedBuilding);
+  }, [selectedBuilding]);
+
   const navigate = useNavigate();
 
   // Fetch polygon data for map
@@ -57,9 +64,13 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
+    setSelectedBuilding(null);
     if (selectedCategory === "all") {
-      navigate(`/`);
+      navigate(`/all-${selectedInterval}-minut`);
       return;
+    }
+    if (selectedInterval === "kazde" && selectedCategory !== "all") {
+      setSelectedInterval("5");
     }
     navigate(`/${selectedCategory}-${selectedInterval}-minut`);
   }, [selectedInterval, selectedCategory]);
@@ -75,6 +86,39 @@ const Home = () => {
   return (
     <>
       <MapContainer dataPolygons={dataPolygons} dataResidence={dataResidence} dataBuildings={dataBuildings} />
+      {selectedBuilding && (
+        <div className='absolute bottom-0 left-10 w-96 z-10 bg-white px-5 pt-5 rounded-t-lg'>
+          <h1 className='text-2xl font-bold pb-3'>Dostupné služby:</h1>
+          <div className='overflow-y-scroll h-60'>
+            {selectedBuildingData.properties.ids
+              .sort((a: string, b: string) => {
+                return Number(b.split("-")[b.split("-").length - 2]) - Number(a.split("-")[a.split("-").length - 2]);
+              })
+              .map((id: string) => {
+                return (
+                  <div key={id} className='flex items-center pb-5'>
+                    <div
+                      className={`w-4 h-4 rounded-full ${
+                        id.split("-")[id.split("-").length - 2] === "5"
+                          ? "indicator-5"
+                          : id.split("-")[id.split("-").length - 2] === "10"
+                          ? "indicator-10"
+                          : id.split("-")[id.split("-").length - 2] === "15"
+                          ? "indicator-15"
+                          : "indicator-20"
+                      } mr-3`}></div>
+                    <div className='text-gray-500'>
+                      {`${id.split("-")[id.split("-").length - 2]} minút - ${
+                        dataPolygons.features.find((feature: any) => feature.properties.id === id).properties.name
+                      }`}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
       <div className='absolute top-0 left-0 flex w-full bg-gradient-to-b from-[#fff] to-[#ffffff00] px-6 py-3'>
         <img className='h-10' src='/logo.svg' alt='Logo' />
 
@@ -101,22 +145,20 @@ const Home = () => {
                 );
               })}
           </select>
-
-          {selectedCategory !== "all" && (
-            <select
-              id='layer-type'
-              name='layer-type'
-              className='w-full ml-5 pl-3 pr-3 py-2 text-base border-gray-300 rounded-md focus:outline-none'
-              onChange={(e) => {
-                setSelectedInterval(e.target.value);
-              }}
-              value={selectedInterval}>
-              <option value='5'>5 minút</option>
-              <option value='10'>10 minút</option>
-              <option value='15'>15 minút</option>
-              <option value='20'>20 minút</option>
-            </select>
-          )}
+          <select
+            id='layer-type'
+            name='layer-type'
+            className='w-full ml-5 pl-3 pr-3 py-2 text-base border-gray-300 rounded-md focus:outline-none'
+            onChange={(e) => {
+              setSelectedInterval(e.target.value);
+            }}
+            value={selectedInterval}>
+            {selectedCategory === "all" && <option value='kazde'>Všetky časy</option>}
+            <option value='5'>5 minút</option>
+            <option value='10'>10 minút</option>
+            <option value='15'>15 minút</option>
+            <option value='20'>20 minút</option>
+          </select>
         </div>
       </div>
     </>
